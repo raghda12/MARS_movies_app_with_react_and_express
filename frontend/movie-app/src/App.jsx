@@ -1,121 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useMovie } from "./context/MovieContext";
+import MovieCarousel from "./components/MovieCarousel";
+import MovieDetails from "./components/MovieDetails";
+import SearchBar from "./components/SearchBar";
+import MovieForm from "./components/MovieForm";
+import Button from "./components/Button";
+import Logo from "./components/Logo";
 
 function App() {
-  const [count, setCount] = useState(0)
-
+  const { state, dispatch } = useMovie();
+  const movie = state.hoveredMovie || state.selectedMovie;
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div
+      id="app"
+      style={{
+        backgroundImage: movie?.poster ? `url(${movie.poster})` : "none",
+      }}
+    >
+      <header className="header">
+        <Logo />
+        <SearchBar onSearch={(q) => dispatch({ type: "SEARCH", payload: q })} />
+        <Button
+          label="Add Movie"
+          onClick={() => dispatch({ type: "SHOW_FORM" })}
+          variant="primary"
+        />
+      </header>
 
-      <div className="ticks"></div>
+      {state.showForm && (
+        <MovieForm
+          movie={state.editingMovie}
+          onSave={(m) =>
+            dispatch({
+              type: m.id ? "UPDATE_MOVIE" : "ADD_MOVIE",
+              payload: m,
+            })
+          }
+          onCancel={() => dispatch({ type: "HIDE_FORM" })}
+        />
+      )}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {state.status === "empty" && (
+        <p style={{ textAlign: "center", marginTop: "2rem", color: "#aaa" }}>
+          No results found
+        </p>
+      )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {state.filteredMovies.length > 0 && (
+        <>
+          <MovieDetails movie={movie} />
+
+          <MovieCarousel
+            movies={state.filteredMovies}
+            selectedMovie={state.selectedMovie}
+            onSelect={(m) => dispatch({ type: "SET_SELECTED", payload: m })}
+            onHover={(m) => dispatch({ type: "SET_HOVERED", payload: m })}
+            onLeave={() => dispatch({ type: "CLEAR_HOVER" })}
+          />
+        </>
+      )}
+
+      {state.selectedMovie && (
+        <div className="movie-actions">
+          <Button
+            label="Edit"
+            variant="primary"
+            onClick={() =>
+              dispatch({ type: "SHOW_FORM", payload: state.selectedMovie })
+            }
+          />
+          <Button
+            label="Delete"
+            variant="danger"
+            onClick={() =>
+              dispatch({
+                type: "DELETE_MOVIE",
+                payload: state.selectedMovie.id,
+              })
+            }
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
-export default App
+export default App;

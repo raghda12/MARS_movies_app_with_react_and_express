@@ -1,20 +1,41 @@
-import React, { createContext, useReducer, useContext } from "react";
-import { movies as initialMovies } from "../data/movies";
+import React, { createContext, useReducer, useContext, useEffect } from "react";
+import {
+  fetchAllMovies,
+  createMovie,
+  updateMovie,
+  deleteMovie,
+  searchMovies,
+} from "../services/api";
 
 const MovieContext = createContext();
 
 const initialState = {
-  movies: initialMovies,
-  filteredMovies: initialMovies,
-  selectedMovie: initialMovies[0] || null,
+  movies: [],
+  filteredMovies: [],
+  selectedMovie: null,
   hoveredMovie: null,
-  status: "idle",
+  status: "loading",
   showForm: false,
   editingMovie: null,
+  error: null,
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
+    case "SET_MOVIES":
+      return {
+        ...state,
+        movies: action.payload,
+        filteredMovies: action.payload,
+        selectedMovie: action.payload[0] || null,
+        status: "idle",
+        error: null,
+      };
+    case "SET_LOADING":
+      return { ...state, status: "loading" };
+    case "SET_ERROR":
+      return { ...state, status: "error", error: action.payload };
+
     case "SET_SELECTED":
       return { ...state, selectedMovie: action.payload };
 
@@ -23,25 +44,6 @@ const reducer = (state, action) => {
 
     case "CLEAR_HOVER":
       return { ...state, hoveredMovie: null };
-
-    case "UPDATE_POSTER": {
-      const { id, poster } = action.payload;
-      const updateList = (list) =>
-        list.map((m) => (m.id === id ? { ...m, poster } : m));
-      return {
-        ...state,
-        movies: updateList(state.movies),
-        filteredMovies: updateList(state.filteredMovies),
-        selectedMovie:
-          state.selectedMovie?.id === id
-            ? { ...state.selectedMovie, poster }
-            : state.selectedMovie,
-        hoveredMovie:
-          state.hoveredMovie?.id === id
-            ? { ...state.hoveredMovie, poster }
-            : state.hoveredMovie,
-      };
-    }
 
     case "SEARCH": {
       const query = action.payload.toLowerCase().trim();
@@ -113,8 +115,41 @@ const reducer = (state, action) => {
 
 export const MovieProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    fetchAllMovies()
+      .then((movies) => dispatch({ type: "SET_MOVIES", payload: movies }))
+      .catch((err) => dispatch({ type: "SET_ERROR", payload: err.message }));
+  }, []);
+
+  const addMovie = async (movieData) => {
+    const newMovie = await createMovie(movieData);
+    dispatch({ type: "ADD_MOVIE", payload: newMovie });
+  };
+
+  const editMovie = async (id, movieData) => {
+    const updated = await updateMovie(id, movieData);
+    dispatch({ type: "UPDATE_MOVIE", payload: updated });
+  };
+
+  const removeMovie = async (id) => {
+    await deleteMovie(id);
+    dispatch({ type: "DELETE_MOVIE", payload: id });
+  };
+
+  const search = async (query) => {
+    dispatch({ type: "SET_LOADING" });
+    try {
+      const results = await searchMovies(query);
+      dispatch({ type: "SET_MOVIES", payload: results });
+    } catch (err) {
+      dispatch({ type: "SET_ERROR", payload: err.message });
+    }
+  };
   return (
-    <MovieContext.Provider value={{ state, dispatch }}>
+    <MovieContext.Provider
+      value={{ state, dispatch, addMovie, editMovie, removeMovie, search }}
+    >
       {children}
     </MovieContext.Provider>
   );

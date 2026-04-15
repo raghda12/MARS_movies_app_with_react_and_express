@@ -7,8 +7,30 @@ import Button from "../components/Button";
 import Logo from "../components/Logo";
 
 export default function Home() {
-  const { state, dispatch } = useMovie();
+  const { state, dispatch, addMovie, editMovie, removeMovie } = useMovie();
   const movie = state.hoveredMovie || state.selectedMovie;
+
+  const handleSave = async (movieData) => {
+    try {
+      if (state.editingMovie) {
+        await editMovie(state.editingMovie.id, movieData);
+      } else {
+        await addMovie(movieData);
+      }
+    } catch (err) {
+      console.error("Error saving movie:", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!state.selectedMovie) return;
+    try {
+      await removeMovie(state.selectedMovie.id);
+    } catch (err) {
+      console.error("Error deleting movie:", err);
+    }
+  };
+
   return (
     <div
       id="app"
@@ -26,15 +48,22 @@ export default function Home() {
         />
       </header>
 
+      {state.status === "loading" && (
+        <p style={{ textAlign: "center", marginTop: "2rem", color: "#aaa" }}>
+          Loading movies...
+        </p>
+      )}
+
+      {state.status === "error" && (
+        <p style={{ textAlign: "center", marginTop: "2rem", color: "#e74c3c" }}>
+          Failed to load movies. Make sure the server is running on port 5000.
+        </p>
+      )}
+
       {state.showForm && (
         <MovieForm
           movie={state.editingMovie}
-          onSave={(m) =>
-            dispatch({
-              type: m.id ? "UPDATE_MOVIE" : "ADD_MOVIE",
-              payload: m,
-            })
-          }
+          onSave={handleSave}
           onCancel={() => dispatch({ type: "HIDE_FORM" })}
         />
       )}
@@ -48,7 +77,6 @@ export default function Home() {
       {state.filteredMovies.length > 0 && (
         <>
           <MovieDetails movie={movie} />
-
           <MovieCarousel
             movies={state.filteredMovies}
             selectedMovie={state.selectedMovie}
@@ -68,16 +96,7 @@ export default function Home() {
               dispatch({ type: "SHOW_FORM", payload: state.selectedMovie })
             }
           />
-          <Button
-            label="Delete"
-            variant="danger"
-            onClick={() =>
-              dispatch({
-                type: "DELETE_MOVIE",
-                payload: state.selectedMovie.id,
-              })
-            }
-          />
+          <Button label="Delete" variant="danger" onClick={handleDelete} />
         </div>
       )}
     </div>

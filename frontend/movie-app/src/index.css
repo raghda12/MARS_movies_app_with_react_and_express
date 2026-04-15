@@ -356,6 +356,7 @@ header {
 }
 .movie-card {
   min-width: 120px;
+  max-width: 200px;
   cursor: pointer;
   transition: transform 0.2s;
   text-align: center;

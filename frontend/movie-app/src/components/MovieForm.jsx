@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import Button from "./Button";
 const MovieForm = ({ onSave, onCancel, movie }) => {
   const [title, setTitle] = useState("");
   const [overview, setOverview] = useState("");
@@ -32,7 +33,6 @@ const MovieForm = ({ onSave, onCancel, movie }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave({
-      id: movie?.id || Date.now(),
       title,
       overview,
       release_date: releaseDate,
@@ -46,8 +46,6 @@ const MovieForm = ({ onSave, onCancel, movie }) => {
   const handleOverlayClick = (e) => {
     if (e.target === e.currentTarget) onCancel();
   };
-
-  // Portal يرسم المودل مباشرة داخل document.body — خارج #app تماماً
   return createPortal(
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal">
@@ -131,12 +129,18 @@ const MovieForm = ({ onSave, onCancel, movie }) => {
           </div>
 
           <div className="form-actions">
-            <button type="button" className="btn-cancel" onClick={onCancel}>
-              Cancel
-            </button>
-            <button type="submit" className="btn-submit">
-              {movie ? "Update Movie" : "Add Movie"}
-            </button>
+            <Button
+              type="button"
+              className="cancel"
+              onClick={onCancel}
+              label={"Cancel"}
+              variant="btn-cancel"
+            />
+            <Button
+              type="submit"
+              variant="submit"
+              label={movie ? "Update Movie" : "Add Movie"}
+            />
           </div>
         </form>
       </div>

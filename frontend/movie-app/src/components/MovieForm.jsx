@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-
 const MovieForm = ({ onSave, onCancel, movie }) => {
   const [title, setTitle] = useState("");
   const [overview, setOverview] = useState("");

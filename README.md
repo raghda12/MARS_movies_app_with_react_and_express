@@ -54,19 +54,13 @@ The frontend is built using React and Vite.
 
 ## 🛠️ Features & Contributions
 
-> *Note: Please replace the placeholder issue/PR links with the actual links from your repository.*
 
 ### Raghda Alnajjar
 * **Feature:** Designed and implemented the frontend architecture and React components.
-* **Related Issue:** [#Issue-1](#)
-* **Related PR:** [#PR-1](#)
 
 ### Mohammed Debes
 * **Feature:** Built the backend Express server, RESTful APIs, and basic mock data model.
-* **Related Issue:** [#Issue-2](#)
-* **Related PR:** [#PR-2](#)
 
-*(Add more specific features you both worked on above).*
 
 ---
 
